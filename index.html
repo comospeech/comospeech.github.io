@@ -1,7 +1,1152 @@
 <!DOCTYPE html>
-<html>
-<body>
-<h1>Hello World</h1>
-<p>I'm hosted with GitHub Pages.</p>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="generator" content="Hugo 0.66.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,700" rel="stylesheet" type="text/css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
+<link rel="stylesheet" href="../css/normalize.css">
+<link rel="stylesheet" href="../css/skeleton.css">
+<link rel="stylesheet" href="../css/custom.css">
+<link rel="alternate" href="index.xml" type="application/rss+xml" title="Speech Research">
+<link rel="shortcut icon" href="favicon.png" type="image/x-icon" />
+<title>ResGrad: Residual Denoising Diffusion Probabilistic Models for Text to Speech - Speech Research</title>
+</head>
+
+
+<body rightmargin="100" leftmargin="100" topmargin="50" bottommargin="100" line-height:160%>
+<font size="5">
+<div class="container">
+
+	<header role="banner">
+		
+			
+		
+		
+	</header>
+
+
+	<main role="main">
+		<article itemscope itemtype="https://schema.org/BlogPosting">
+            <h1 class="entry-title" itemprop="headline" align="center"><font color="000093">ResGrad: Residual Denoising Diffusion Probabilistic Models for Text to Speech</font></h1>
+			
+			<section itemprop="entry-text">
+				<br>
+
+<h2 id="abstract"><font color="000093">Abstract</font></h2>
+<p><font color="061E61">  Denoising Diffusion Probabilistic Models (DDPMs) are emerging in text-to-speech (TTS) synthesis because of their strong capability of generating high-fidelity samples. However, their iterative refinement process in high-dimensional data space results in slow inference speed, which restricts their application in real-time systems. Previous works have explored speeding up by minimizing the number of inference steps but at the cost of sample quality. In this work, to improve the inference speed for DDPM-based TTS model while achieving high sample quality, we propose ResGrad, a lightweight diffusion model which learns to refine the output spectrogram of an existing TTS model (e.g., FastSpeech 2) by predicting the residual between the model output and the corresponding ground-truth speech. ResGrad has several advantages: 1) Compare with other acceleration methods for DDPM which need to synthesize speech from scratch, ResGrad reduces the complexity of task by changing the generation target from ground-truth mel-spectrogram to the residual, resulting into a more lightweight model and thus a smaller real-time factor. 2) ResGrad is employed in the inference process of the existing TTS model in a plug-and-play way, without re-training this model. We verify ResGrad on the single-speaker dataset LJSpeech and two more challenging datasets with multiple speakers (LibriTTS) and high sampling rate (VCTK). Experimental results show that in comparison with other speed-up methods of DDPMs: 1) ResGrad achieves better sample quality with the same inference speed measured by real-time factor; 2) with similar speech quality, ResGrad synthesizes speech faster than baseline methods by more than 10 times.</font></p>
+<br></br>
+<figure>
+<p align="center"><img src="GeneratedSamples/DiffSkinpipeline.png" width="80%"  class="center"/></p>
+<figcaption>
+<b>Figure 1:</b> Illustration of ResGrad. ResGrad first predicts the residual between the mel-spectrogram estimated
+by an existing TTS model and the ground-truth mel-spectrogram, and then adds the residual to the estimated
+mel-spectrogram to get the refined mel-spectrogram.
+</figcaption>
+</figure>
+<br></br>
+<h2 id="audio-samples"><font color="000093">Audio Samples</font></h2>
+<p><font color="061E61"> Our method is shown in Figure 1. The below audio samples show the comparison between Recordings, ground-truth (GT) mel + Vocoder, FastSpeech 2, DiffGAN-TTS, DiffSpeech, ProDiff, GradTTS, ResGrad-4 (Our method), and ResGrad-50 (Our method). Three samples are randomly selected from the test dataset of LJSpeech, LibriTTS, and VCTK. Details are illustrated as follows: </font></p>
+<ul style="list-style-type:square">
+<!--
+<li><font color="061E61"> For each dataset, the same HiFi-GAN vocoder pretrained on GT mel is used for all methods. </font></li>
+-->
+<!--<li>
+<font color="061E61"> Each generated sample has been normalized, and the raw recording is shown in Recordings. </font></li>
+-->
+<!--<li>
+<li><font color="061E61"> Our method ResGrad uses FastSpeech 2 as the initial predictor for estimating mel-spectrogram. </font></li>
+-->
+<li><font color="061E61"> The number of inference steps used by diffusion models is shown behind the name of models. For example, ResGrad-4 stands for ResGrad with 4 inference steps. But FastSpeech 2 is a model name instead of denoting the number of inference steps. </font></li>
+<li><font color="061E61"> For each dataset, the inference speed measured by the real-time factor (RTF) is shown in the brackets of the first case. </font></li>
+<li><font color="061E61"> In order to improve the inference speed at each sampling step, ResGrad uses the same U-Net architecture in GradTTS but with twice fewer channels to reduce the model size (2.0M in ResGrad vs 7.6M in GradTTS). </font></li>
+</ul>
+
+<br></br>
+<p><b><font color="000093">LJSpeech: A dataset contains the recordings from a female speaker at a sampling rate of 22.05kHz.</font></b></p>
+
+<p><em><font color="061E61">Sample 1: Printing, then, for our purpose, may be considered as the art of making books by means of movable types.</font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">Recordings</th>
+<th style="text-align: center">GT mel + Vocoder</th>
+<th style="text-align: center">FastSpeech 2 (RTF: 0.003)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/recording_9.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/gtmel_9.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/fs2_9.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ProDiff (0.033)</th>
+<th style="text-align: center">DiffGAN-TTS (0.009)</th>
+<th style="text-align: center">ResGrad-4 (0.018)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/prodiff_9.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/diffgantts_9.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/resgrad4_9.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">DiffSpeech-71 (0.182)</th>
+<th style="text-align: center">GradTTS-50 (0.193)</th>
+<th style="text-align: center">ResGrad-50 (0.169)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/diffspeech_9.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/gradtts_9.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/resgrad50_9.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<p><em><font color="061E61">Sample 2: And it was a matter of course that in the Middle Ages, when the craftsmen took care that beautiful form should always be a part of their productions whatever they were, </font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">Recordings</th>
+<th style="text-align: center">GT mel + Vocoder</th>
+<th style="text-align: center">FastSpeech 2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/recording_14.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/gtmel_14.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/fs2_14.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ProDiff</th>
+<th style="text-align: center">DiffGAN-TTS</th>
+<th style="text-align: center">ResGrad-4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/prodiff_14.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/diffgantts_14.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/resgrad4_14.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">DiffSpeech-71</th>
+<th style="text-align: center">GradTTS-50</th>
+<th style="text-align: center">ResGrad-50</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/diffspeech_14.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/gradtts_14.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/resgrad50_14.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+
+<!--
+<p><em><font color="061E61">Sample 3: the forms of printed letters should be beautiful, and that their arrangement on the page should be reasonable and a help to the shapeliness of the letters themselves.</font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">Recordings</th>
+<th style="text-align: center">GT mel + Vocoder</th>
+<th style="text-align: center">FastSpeech 2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/recording_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/gtmel_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/fs2_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">DiffGAN-TTS</th>
+<th style="text-align: center">DiffSpeech</th>
+<th style="text-align: center">ProDiff</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/diffgantts_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/diffspeech_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/prodiff_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">GradTTS-50</th>
+<th style="text-align: center">ResGrad-4</th>
+<th style="text-align: center">ResGrad-50</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/gradtts_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/resgrad4_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/resgrad50_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+-->
+
+<!--
+<p><em><font color="061E61">Sample 4: The Chronicles of Newgate, Volume two. By Arthur Griffiths. Section four: Newgate down to eighteen eighteen.</font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">Recordings</th>
+<th style="text-align: center">GT mel + Vocoder</th>
+<th style="text-align: center">FastSpeech 2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/recording_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/gtmel_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/fs2_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">DiffGAN-TTS</th>
+<th style="text-align: center">DiffSpeech</th>
+<th style="text-align: center">ProDiff</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/diffgantts_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/diffspeech_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/prodiff_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">GradTTS-50</th>
+<th style="text-align: center">ResGrad-4</th>
+<th style="text-align: center">ResGrad-50</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/gradtts_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/resgrad4_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/resgrad50_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+-->
+
+<p><em><font color="061E61">Sample 3: produced the block books, which were the immediate predecessors of the true printed book,</font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">Recordings</th>
+<th style="text-align: center">GT mel + Vocoder</th>
+<th style="text-align: center">FastSpeech 2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/recording_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/gtmel_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/fs2_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ProDiff</th>
+<th style="text-align: center">DiffGAN-TTS</th>
+<th style="text-align: center">ResGrad-4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/prodiff_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/diffgantts_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/resgrad4_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">DiffSpeech-71</th>
+<th style="text-align: center">GradTTS-50</th>
+<th style="text-align: center">ResGrad-50</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/diffspeech_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/gradtts_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/resgrad50_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+
+
+<!--
+<p><em><font color="061E61">Sample 3: The inadequacy of the jail was noticed and reported upon again and again by the grand juries of the city of London,</font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">Recordings</th>
+<th style="text-align: center">GT mel + Vocoder</th>
+<th style="text-align: center">FastSpeech 2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/recording_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/gtmel_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/fs2_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ResGrad-4</th>
+<th style="text-align: center">DiffGAN-TTS</th>
+<th style="text-align: center">ProDiff</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/resgrad4_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/diffgantts_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/prodiff_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ResGrad-50</th>
+<th style="text-align: center">GradTTS-50</th>
+<th style="text-align: center">DiffSpeech-71</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/resgrad50_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/gradtts_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LJSpeech/diffspeech_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+-->
+
+<p><b><font color="000093">LibriTTS: A dataset contains the recordings from 1046 speakers at a sampling rate of 24kHz.</font></b></p>
+<p><em><font color="061E61">Sample 1: An old greyhound will trust the more fatiguing part of the chace to the younger, and will place himself so as to meet the hare in her doubles; nor are the conjectures, which he forms on this occasion, founded in any thing but his observation and experience.</font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">Recordings</th>
+<th style="text-align: center">GT mel + Vocoder</th>
+<th style="text-align: center">FastSpeech 2 (RTF: 0.003)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/recording_21.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/gtmel_21.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/fs2_21.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ProDiff (0.061)</th>
+<th style="text-align: center">GradTTS-4 (0.025)</th>
+<th style="text-align: center">ResGrad-4 (0.020)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/prodiff_21.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/gradtts4_21_24k.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/resgrad4_21.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">DiffSpeech-71 (0.263)</th>
+<th style="text-align: center">GradTTS-50 (0.259)</th>
+<th style="text-align: center">ResGrad-50 (0.223)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/diffspeech_21.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/gradtts50_21_24k.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/resgrad50_21.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+
+<p><em><font color="061E61">Sample 2: The one without the other creates a lack of mental balance which is the most favorable condition for a pathological disturbance.</font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">Recordings</th>
+<th style="text-align: center">GT mel + Vocoder</th>
+<th style="text-align: center">FastSpeech 2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/recording_34.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/gtmel_34.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/fs2_34.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ProDiff</th>
+<th style="text-align: center">GradTTS-4</th>
+<th style="text-align: center">ResGrad-4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/prodiff_34.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/gradtts4_34_24k.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/resgrad4_34.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">DiffSpeech-71</th>
+<th style="text-align: center">GradTTS-50</th>
+<th style="text-align: center">ResGrad-50</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/diffspeech_34.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/gradtts50_34_24k.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/resgrad50_34.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<p><em><font color="061E61">Sample 3: "This other package must be the manuscript," said Oxenden, "and it'll tell all about it."</font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">Recordings</th>
+<th style="text-align: center">GT mel + Vocoder</th>
+<th style="text-align: center">FastSpeech 2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/recording_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/gtmel_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/fs2_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ProDiff</th>
+<th style="text-align: center">GradTTS-4</th>
+<th style="text-align: center">ResGrad-4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/prodiff_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/gradtts4_3_24k.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/resgrad4_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">DiffSpeech-71</th>
+<th style="text-align: center">GradTTS-50</th>
+<th style="text-align: center">ResGrad-50</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/diffspeech_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/gradtts50_3_24k.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/resgrad50_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<!--
+<p><em><font color="061E61">Sample 4: It was no good asking any of the crowd we met. They didn't look as if they understood any civilized tongue.</font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">Recordings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/recording_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">GT mel + Vocoder</th>
+<th style="text-align: center">FastSpeech 2</th>
+<th style="text-align: center">ProDiff</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/gtmel_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/fs2_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/prodiff_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ResGrad-4</th>
+<th style="text-align: center">GradTTS-4</th>
+<th style="text-align: center">DiffSpeech-4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/resgrad4_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/gradtts4_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/diffspeech4_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ResGrad-50</th>
+<th style="text-align: center">GradTTS-50</th>
+<th style="text-align: center">DiffSpeech-50</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/resgrad50_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/gradtts50_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/DiffSpeech50_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<p><em><font color="061E61">Sample 5: The one without the other creates a lack of mental balance which is the most favorable condition for a pathological disturbance.</font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">Recordings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/recording_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">GT mel + Vocoder</th>
+<th style="text-align: center">FastSpeech 2</th>
+<th style="text-align: center">ProDiff</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/gtmel_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/fs2_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/prodiff_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ResGrad-4</th>
+<th style="text-align: center">GradTTS-4</th>
+<th style="text-align: center">DiffSpeech-4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/resgrad4_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/gradtts4_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/diffspeech4_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ResGrad-50</th>
+<th style="text-align: center">GradTTS-50</th>
+<th style="text-align: center">DiffSpeech-50</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/resgrad50_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/gradtts50_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/LibriTTS/DiffSpeech50_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+-->
+
+<br></br>
+<p><b><font color="000093">VCTK: A dataset contains the recordings from 108 speakers at a sampling rate of 48kHz.</font></b></p>
+<!--
+<p><em><font color="061E61">Sample 1: Six spoons of fresh snow peas, five thick slabs of blue cheese, and maybe a snack for her brother Bob.</font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">Recordings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/recording_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">GT mel + Vocoder</th>
+<th style="text-align: center">FastSpeech 2</th>
+<th style="text-align: center">ProDiff</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/gtmel_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/fs2_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/prodiff_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ResGrad-4</th>
+<th style="text-align: center">GradTTS-4</th>
+<th style="text-align: center">DiffSpeech-4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/resgrad4_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/gradtts4_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/diffspeech4_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ResGrad-50</th>
+<th style="text-align: center">GradTTS-50</th>
+<th style="text-align: center">DiffSpeech-50</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/resgrad50_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/gradtts50_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/DiffSpeech50_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+-->
+
+<p><em><font color="061E61">Sample 1: We also need a small plastic snake and a big toy frog for the kids.</font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">Recordings</th>
+<th style="text-align: center">GT mel + Vocoder</th>
+<th style="text-align: center">FastSpeech 2 (RTF: 0.004)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/recording_2.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/gtmel_2.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/fs2_2.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ProDiff (0.235)</th>
+<th style="text-align: center">GradTTS-4 (0.028)</th>
+<th style="text-align: center">ResGrad-4 (0.022)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/prodiff_2_48k.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/gradtts4_2.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/resgrad4_2.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">DiffSpeech-71 (0.857)</th>
+<th style="text-align: center">GradTTS-50 (0.292)</th>
+<th style="text-align: center">ResGrad-50 (0.244)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/diffspeech_2_revised_48k.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/gradtts50_2.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/resgrad50_2.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<p><em><font color="061E61">Sample 2: We also need a small plastic snake and a big toy frog for the kids.</font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">Recordings</th>
+<th style="text-align: center">GT mel + Vocoder</th>
+<th style="text-align: center">FastSpeech 2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/recording_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/gtmel_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/fs2_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ProDiff</th>
+<th style="text-align: center">GradTTS-4</th>
+<th style="text-align: center">ResGrad-4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/prodiff_3_48k.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/gradtts4_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/resgrad4_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">DiffSpeech-71</th>
+<th style="text-align: center">GradTTS-50</th>
+<th style="text-align: center">ResGrad-50</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/diffspeech_3_revised_48k_normed.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/gradtts50_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/resgrad50_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+
+<!--
+<p><em><font color="061E61">Sample 4: She can scoop these things into three red bags, and we will go meet her Wednesday at the train station.</font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">Recordings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/recording_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">GT mel + Vocoder</th>
+<th style="text-align: center">FastSpeech 2</th>
+<th style="text-align: center">ProDiff</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/gtmel_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/fs2_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/prodiff_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ResGrad-4</th>
+<th style="text-align: center">GradTTS-4</th>
+<th style="text-align: center">DiffSpeech-4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/resgrad4_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/gradtts4_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/diffspeech4_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ResGrad-50</th>
+<th style="text-align: center">GradTTS-50</th>
+<th style="text-align: center">DiffSpeech-50</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/resgrad50_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/gradtts50_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/DiffSpeech50_4.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+-->
+
+<p><em><font color="061E61">Sample 3: We also need a small plastic snake and a big toy frog for the kids.</font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">Recordings</th>
+<th style="text-align: center">GT mel + Vocoder</th>
+<th style="text-align: center">FastSpeech 2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/recording_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/gtmel_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/fs2_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">ProDiff</th>
+<th style="text-align: center">GradTTS-4</th>
+<th style="text-align: center">ResGrad-4</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/prodiff_5_48k.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/gradtts4_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/resgrad4_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">DiffSpeech-71</th>
+<th style="text-align: center">GradTTS-50</th>
+<th style="text-align: center">ResGrad-50</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/diffspeech_5_revised_48k.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/gradtts50_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/VCTK/resgrad50_5.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+
+
+<br></br>
+<h2 id="residualcalculation"><font color="000093">Residual Calculation</font></h2>
+<p><font color="061E61"> The below samples show the comparison between the two residual calculation methods in ResGrad. Three samples are selected from the test dataset of LJSpeech to show the risk of using predicted pitch (<b>ResGrad - pitch<sub>GT</sub></b>) instead of ground-truth pitch (<b>ResGrad</b>). In inference stage, 50 steps are used for generation.</font>
+<p><em><font color="061E61">Sample 1: And it is worth mention in passing that, as an <b>example</b> of fine typography,</font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">FastSpeech 2</th>
+<th style="text-align: center">ResGrad</th>
+<th style="text-align: center">ResGrad - pitch<sub>GT</sub></th>
+<th style="text-align: center">GT mel + Vocoder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualComparison/fs2_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualComparison/gtpitch1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualComparison/predpitch1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualComparison/gt_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<p><em><font color="061E61">The generated residual from ResGrad - pitch<sub>GT</sub> : </font></em></p>
+<p align="center"><img src="GeneratedSamples/ResidualComparison/predpitch1.png" width="50%"  class="center"/></p>
+
+
+<p><em><font color="061E61">Sample 2: Printing, then, for <b>our</b> purpose, may be considered as the art of making books by means of movable types.</font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">FastSpeech 2</th>
+<th style="text-align: center">ResGrad</th>
+<th style="text-align: center">ResGrad - pitch<sub>GT</sub></th>
+<th style="text-align: center">GT mel + Vocoder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualComparison/fs2_2.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualComparison/gtpitch2.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualComparison/predpitch2.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualComparison/gt_2.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<p><em><font color="061E61">The generated residual from ResGrad - pitch<sub>GT</sub> : </font></em></p>
+<p align="center"><img src="GeneratedSamples/ResidualComparison/predpitch2.png" width="50%"  class="center"/></p>
+
+<p><em><font color="061E61">Sample 3: The Middle Ages <b>brought</b> calligraphy to perfection, and it was natural therefore </font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">FastSpeech 2</th>
+<th style="text-align: center">ResGrad</th>
+<th style="text-align: center">ResGrad - pitch<sub>GT</sub></th>
+<th style="text-align: center">GT mel + Vocoder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualComparison/fs2_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualComparison/gtpitch3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualComparison/predpitch3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualComparison/gt_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+<p><em><font color="061E61">The generated residual from ResGrad - pitch<sub>GT</sub> : </font></em></p>
+<p align="center"><img src="GeneratedSamples/ResidualComparison/predpitch3.png" width="50%"  class="center"/></p>
+
+
+
+<h2 id="residualcalculation"><font color="000093">Residual Prediction</font></h2>
+<p><font color="061E61"> The below samples show the comparison between the two residual prediction methods: <b>ResGrad</b> and <b>ResUNet</b>. Three samples are randomly selected from the test dataset of LibriTTS. </font>
+<p><em><font color="061E61">Sample 1: Disturbed by these different reflections; inclining now to one course and then to another, and again recoiling from all, as each successive consideration presented itself to her mind; Rose passed a sleepless and anxious night." </font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">FastSpeech 2</th>
+<th style="text-align: center">ResGrad-4</th>
+<th style="text-align: center">ResUNet</th>
+<th style="text-align: center">GT mel + Vocoder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualPrediction/fs2_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualPrediction/ResGrad1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualPrediction/ResUNet1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualPrediction/gt_1.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+<p><em><font color="061E61">Sample 2: That means from the start an effort to secure balance between general education and particular development. </font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">FastSpeech 2</th>
+<th style="text-align: center">ResGrad-4</th>
+<th style="text-align: center">ResUNet</th>
+<th style="text-align: center">GT mel + Vocoder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualPrediction/fs2_2.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualPrediction/ResGrad2.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualPrediction/ResUNet2.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualPrediction/gt_2.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+
+<p><em><font color="061E61">Sample 3: "Grandfather, I would give you my two eyes for your place!" cried Manstin. </font></em></p>
+<table align="center">
+<thead>
+<tr>
+<th style="text-align: center">FastSpeech 2</th>
+<th style="text-align: center">ResGrad-4</th>
+<th style="text-align: center">ResUNet</th>
+<th style="text-align: center">GT mel + Vocoder</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualPrediction/fs2_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualPrediction/ResGrad3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualPrediction/ResUNet3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+<td style="text-align: center"><audio controls="controls" ><source src="GeneratedSamples/ResidualPrediction/gt_3.wav" autoplay/>Your browser does not support the audio element.</audio></td>
+</tr>
+</tbody>
+</table>
+
+
+</p>
+
+			</section>
+		</article>
+	</main>
+
+
+	
+
+</div>
+
+<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-139981676-1', 'auto');
+	ga('send', 'pageview');
+</script>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+<script type="text/x-mathjax-config">
+     MathJax.Hub.Config({
+         HTML: ["input/TeX","output/HTML-CSS"],
+         TeX: {
+                Macros: {
+                         bm: ["\\boldsymbol{#1}", 1],
+                         argmax: ["\\mathop{\\rm arg\\,max}\\limits"],
+                         argmin: ["\\mathop{\\rm arg\\,min}\\limits"]},
+                extensions: ["AMSmath.js","AMSsymbols.js"],
+                equationNumbers: { autoNumber: "AMS" } },
+         extensions: ["tex2jax.js"],
+         jax: ["input/TeX","output/HTML-CSS"],
+         tex2jax: { inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                    displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+                    processEscapes: true },
+         "HTML-CSS": { availableFonts: ["TeX"],
+                       linebreaks: { automatic: true } }
+     });
+ </script>
+
+ <script type="text/x-mathjax-config">
+     MathJax.Hub.Config({
+       tex2jax: {
+         skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+       }
+     });
+ </script>
+
+ <script type="text/javascript" async
+   src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML">
+ </script>
+
+
+
+
 </body>
 </html>
