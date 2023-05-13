@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<!-- <head>
 <meta charset="utf-8">
 <meta name="generator" content="Hugo 0.66.0" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -12,12 +12,25 @@
 <link rel="alternate" href="index.xml" type="application/rss+xml" title="Speech Research">
 <link rel="shortcut icon" href="favicon.png" type="image/x-icon" />
 <title >CoMoSpeech: One-Step Speech and Singing Voice Synthesis via Consistency Model - Speech Research</title>
-</head>
+</head> -->
+<head>
+	<meta charset="utf-8">
+	<meta name="generator" content="Hugo 0.88.1" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,700" rel="stylesheet" type="text/css">
+	<link rel="stylesheet" href=""https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
+	<link rel="stylesheet" href="css/custom.css">
+	<link rel="stylesheet" href="css/normalize.css">
 
+	<title>CoMoSpeech: One-Step Speech and Singing Voice Synthesis via Consistency Model - Speech Research</title>
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+
+</head>
 
 <body rightmargin="100" leftmargin="100" topmargin="50" bottommargin="100" line-height:160%>
 <font size="5">
 <div class="container">
+  
 
 	<header role="banner">
 		
@@ -29,25 +42,30 @@
 
 	<main role="main">
 		<article itemscope itemtype="https://schema.org/BlogPosting">
+
             <h1 class="entry-title" itemprop="headline" align="center" ><font color="000093"  ><b>CoMoSpeech: One-Step Speech and Singing Voice Synthesis via Consistency Model</b></font></h1>
 			
 			<section itemprop="entry-text">
 				<br>
 
-<h2 id="abstract"><font color="000093">Abstract</font></h2>
-<p style="text-align: justify;"><font color="061E61">  Denoising diffusion probabilistic models (DDPMs) have shown promising performance for speech synthesis. However, a large number of iterative steps are required to achieve high sample quality, which restricts the inference speed. Maintaining sample quality while increasing sampling speed has become a challenging task. In this paper, we propose a <b>Co</b>nsistency <b>Mo</b>del-based <b>Speech</b> synthesis method, CoMoSpeech, which   achieve speech synthesis through a single diffusion sampling step while achieving high audio quality. The consistency constraint is applied to distill a consistency model from a well-designed diffusion-based teacher model, which ultimately yields superior performances in the distilled CoMoSpeech. Our experiments show that by generating audio recordings by a single sampling step, the CoMoSpeech achieves an inference speed more than 150 times faster than real-time on a single NVIDIA A100 GPU, which is comparable to FastSpeech2, making diffusion-sampling based speech synthesis truly practical. Meanwhile, objective and subjective evaluations on text-to-speech and singing voice synthesis show that the proposed teacher models yield the best audio quality, and the one-step sampling based CoMoSpeech achieves the best inference speed with better or comparable audio quality to other conventional multi-step diffusion model baselines.</font></p>
-<!-- <br></br> -->
-<figure>
-<p align="center"><img src="GeneratedSamples/1_12_1.png" width="100%"  class="center"/></p>
-<figcaption>
-<!-- <b>Figure 1:</b> The audio quality and inference speed comparisons of different TTS systems. We use  MOS (mean opinion score) and NFE (number of  function evaluations) to measure the audio quality and inference speed, respectively. The higher MOS and lower NFE indicate better audio quality and faster inference speed. The proposed CoMoSpeech achieves the best trade-off between audio quality and inference speed. In addition, our teacher models achieve the best audio quality among all the compared methods. -->
-<b>Figure 1:</b>  An illustration of  CoMoSpeech. Our CoMoSpeech distills the multi-step sampling of the teacher model into one step utilizing the consistency constraint.
-</figcaption>
-</figure>
-<!-- <br></br> -->
+<div class="container pt-5 mt-5 shadow p-5 mb-5 bg-white rounded"> 
+  <h2 id="abstract" style="text-align:center;"><font color="000093">Abstract</font></h2>
+ 
+  <p style="text-align: justify;"><font color="061E61">  Denoising diffusion probabilistic models (DDPMs) have shown promising performance for speech synthesis. However, a large number of iterative steps are required to achieve high sample quality, which restricts the inference speed. Maintaining sample quality while increasing sampling speed has become a challenging task. In this paper, we propose a <b>Co</b>nsistency <b>Mo</b>del-based <b>Speech</b> synthesis method, CoMoSpeech, which   achieve speech synthesis through a single diffusion sampling step while achieving high audio quality. The consistency constraint is applied to distill a consistency model from a well-designed diffusion-based teacher model, which ultimately yields superior performances in the distilled CoMoSpeech. Our experiments show that by generating audio recordings by a single sampling step, the CoMoSpeech achieves an inference speed more than 150 times faster than real-time on a single NVIDIA A100 GPU, which is comparable to FastSpeech2, making diffusion-sampling based speech synthesis truly practical. Meanwhile, objective and subjective evaluations on text-to-speech and singing voice synthesis show that the proposed teacher models yield the best audio quality, and the one-step sampling based CoMoSpeech achieves the best inference speed with better or comparable audio quality to other conventional multi-step diffusion model baselines.</font></p>
+  <!-- <br></br> -->
+  <figure>
+  <p align="center"><img src="GeneratedSamples/1_12_1.png" width="100%"  class="center"/></p>
+ 
 
-
-<h2 id="TTS"><font color="000093">Text-to-speech</font></h2>
+  <figcaption>
+  <!-- <b>Figure 1:</b> The audio quality and inference speed comparisons of different TTS systems. We use  MOS (mean opinion score) and NFE (number of  function evaluations) to measure the audio quality and inference speed, respectively. The higher MOS and lower NFE indicate better audio quality and faster inference speed. The proposed CoMoSpeech achieves the best trade-off between audio quality and inference speed. In addition, our teacher models achieve the best audio quality among all the compared methods. -->
+  <b>Figure 1:</b>  An illustration of  CoMoSpeech. Our CoMoSpeech distills the multi-step sampling of the teacher model into one step utilizing the consistency constraint.
+  </figcaption>
+  </figure>
+  <!-- <br></br> -->
+</div>
+<div class="container pt-5 mt-5 shadow p-5 mb-5 bg-white rounded"> 
+<h2 id="TTS" style="text-align:center;"><font color="000093">Text-to-speech</font></h2>
 <p style="text-align: justify;"><font color="061E61"> The below audio samples show the comparison between Recordings, ground-truth (GT) mel + Vocoder, FastSpeech 2, DiffGAN-TTS, DiffSpeech, ProDiff, GradTTS,<b> our Teacher   and CoMoSpeech</b> . Samples are selected from the test dataset of  LJSpeech . 
 <ul style="list-style-type:square">
 <!--
@@ -227,9 +245,13 @@
   </tbody>
   </table>
 
-<br></br>
+</div>
+
+ 
+ 
+<div class="container pt-5 mt-5 shadow p-5 mb-5 bg-white rounded"> 
 <!-- </ul> -->
-<h2 id="SVS"><font color="000093">Singing voice synthesis</font></h2> 
+<h2 id="SVS" style="text-align:center;"><font color="000093">Singing voice synthesis</font></h2> 
 <p style="text-align: justify;"><font color="061E61"> The below audio samples show the comparison between Recordings, ground-truth (GT) mel + Vocoder, FFTSinger, HiFiSinger, DiffSinger, <b>Our Teacher-SVS  and CoMoSpeech-SVS</b>. Samples are selected from the test dataset of OpenCpop. 
 <!-- <ul style="list-style-type:square"> -->
 <br></br>
@@ -464,8 +486,11 @@
   </tbody>
   </table>
  
-<!-- </ul> -->
-<h2 id="SVS"><font color="000093">Ablation Studies of Consistency Distillation at Different Sampling Steps</font></h2> 
+</div>
+ 
+
+<div class="container pt-5 mt-5 shadow p-5 mb-5 bg-white rounded"> 
+<h2 id="SVS" style="text-align:center;" ><font color="000093">Ablation Studies of Consistency Distillation at Different Sampling Steps</font></h2> 
 <p style="text-align: justify;"><font color="061E61"> The below audio samples show the comparison between   Our teacher model  (before consistency distillation) and CoMoSpeech (after consistency distillation) at different sampling steps.  
 
 
